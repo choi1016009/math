@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사분원 삼각비 탐구 - TV 수업용 (개선본)</title>
+<style>
+  :root{
+    --ink:#1f2937;
+    --blue:#2563eb;
+    --red:#dc2626;
+    --green:#16a34a;
+    --grid:#cfe8ff;
+    --grid-strong:#7fc6f1;
+  }
+  *{box-sizing:border-box}
+  html,body{width:100%;height:100%}
+  body{
+    margin:0;
+    background:#eef3f8;
+    font-family:"Malgun Gothic","맑은 고딕","Noto Sans KR",sans-serif;
+    color:var(--ink);
+    overflow:hidden;
+  }
+
+  .page-screen{width:100vw;height:100vh}
+  .hidden{display:none!important}
+
+  .nav-btn{
+    position:fixed; z-index:60; bottom:2vh;
+    padding:1.1vh 1.15vw; border:none; border-radius:14px;
+    background:#0f3f8c; color:#fff; font-size:clamp(20px,1.1vw,26px);
+    font-weight:900; box-shadow:0 6px 18px rgba(15,63,140,.25); cursor:pointer;
+  }
+  #prevBtn{left:2vw}
+  #nextBtn{right:2vw}
+  .page-no{
+    position:fixed; z-index:55; bottom:2.45vh; left:50%; transform:translateX(-50%);
+    background:rgba(255,255,255,.95); border:2px solid #cbd5e1; border-radius:999px;
+    padding:.6vh .95vw; font-size:clamp(16px,.9vw,20px); font-weight:900; color:#475569;
+  }
+
+  /* page 1 */
+  #page1{padding:1.3vh 1.1vw 7vh}
+  #container{
+    width:100%; height:100%;
+    display:grid; grid-template-columns:1.55fr 0.75fr; gap:1.05vw;
+  }
+  .canvas-wrapper{
+    min-width:0; min-height:0; background:#fff; border:2px solid #cbd5e1; border-radius:18px;
+    box-shadow:0 8px 24px rgba(15,23,42,.08); padding:.45vh .4vw;
+  }
+  canvas{
+    width:100%; height:100%; display:block; border-radius:14px; background:#fff; touch-action:none;
+  }
+  .controls{
+    min-height:0; display:flex; flex-direction:column; gap:1.05vh;
+  }
+  .title-card,.angle-card,.value-card,.legend-card{
+    background:#fff; border:2px solid #cbd5e1; border-radius:18px;
+    box-shadow:0 8px 24px rgba(15,23,42,.06);
+  }
+  .title-card{
+    padding:1.15vh 1vw; font-size:clamp(28px,1.95vw,42px); font-weight:900; line-height:1.25;
+  }
+  .subtitle{
+    display:block; margin-top:.42vh; font-size:clamp(16px,.98vw,22px);
+    font-weight:600; color:#64748b;
+  }
+  .angle-card{padding:1.25vh 1vw 1.45vh}
+  .angle-display{
+    font-size:clamp(48px,4.1vw,82px); font-weight:900; text-align:center;
+    letter-spacing:-1px; margin-bottom:.75vh;
+  }
+  .theta{font-family:"Times New Roman",serif;font-style:italic}
+  input[type=range]{width:100%;height:18px;accent-color:#1e3a8a;cursor:pointer}
+  .ticks{
+    display:flex; justify-content:space-between; font-size:clamp(16px,.9vw,20px);
+    font-weight:700; color:#475569; margin-top:.35vh;
+  }
+  .value-card{padding:1.05vh .82vw; display:grid; gap:.78vh}
+  .val-item{
+    display:grid; grid-template-columns:.8fr 1.2fr; align-items:center; min-height:8vh;
+    padding:.7vh .8vw; border-radius:14px; background:#f8fafc; border:2px solid #e2e8f0;
+  }
+  .val-item .label{
+    font-family:"Cambria Math","Times New Roman",serif; font-size:clamp(31px,1.95vw,43px); font-weight:800;
+  }
+  .val-item .value{text-align:right; font-size:clamp(31px,1.95vw,43px); font-weight:900}
+  .val-sin{border-left:12px solid var(--red)}
+  .val-cos{border-left:12px solid var(--blue)}
+  .val-tan{border-left:12px solid var(--green)}
+  .val-sin .label,.val-sin .value{color:var(--red)}
+  .val-cos .label,.val-cos .value{color:var(--blue)}
+  .val-tan .label,.val-tan .value{color:var(--green)}
+  .legend-card{padding:1vh .95vw; font-size:clamp(17px,1vw,22px); font-weight:700; line-height:1.65}
+
+  /* math */
+  .math{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif; white-space:nowrap}
+  .theta-symbol{font-family:"Cambria Math","Times New Roman",serif; font-style:italic}
+  .seg{
+    text-decoration:overline;
+    text-decoration-thickness:.08em;
+    text-decoration-skip-ink:none;
+  }
+
+  /* shared info page */
+  .info-page{
+    width:100vw; height:100vh; background:#eef3f8; padding:2.1vh 1.6vw 7.2vh;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .big-card{
+    width:96vw; height:87vh; background:#fff; border:2px solid #cbd5e1; border-radius:24px;
+    box-shadow:0 12px 34px rgba(15,23,42,.08); padding:2.2vh 2vw; display:grid;
+    grid-template-rows:auto 1fr; gap:2vh;
+  }
+  .big-title{
+    font-size:clamp(42px,3vw,66px); font-weight:900; letter-spacing:-1.5px;
+    display:flex; align-items:center; gap:1vw;
+  }
+  .badge-num{
+    display:inline-flex; align-items:center; justify-content:center; width:66px; height:66px;
+    border-radius:16px; background:#145fca; color:#fff; font-size:38px; font-weight:900; flex:0 0 auto;
+  }
+  .big-sub{
+    font-size:clamp(20px,1.18vw,27px); color:#64748b; font-weight:700; margin-top:.45vh;
+  }
+
+  /* page 2 readability 강화 */
+  .formula-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.1vw;align-items:stretch}
+  .formula-card{
+    border:3px solid #dce4ee;border-radius:22px;background:#f8fafc;padding:2vh 1vw;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  }
+  .formula-main{
+    font-family:"Cambria Math","Times New Roman",serif;font-size:clamp(38px,2.45vw,54px);font-weight:800;line-height:1.5;
+  }
+  .formula-note{
+    margin-top:2vh;font-size:clamp(21px,1.18vw,27px);font-weight:800;color:#64748b;line-height:1.55;
+  }
+
+  .special-wrap{display:flex; align-items:center; justify-content:center}
+  .special-table-big{
+    width:100%; height:100%; border-collapse:collapse; table-layout:fixed; text-align:center;
+    font-size:clamp(28px,1.72vw,38px);
+  }
+  .special-table-big th,.special-table-big td{
+    border:3px solid #d5dee8; padding:1.0vh .35vw;
+  }
+  .special-table-big th{background:#f1f5f9; font-weight:900}
+  .special-table-big td{font-weight:850; background:#fff}
+  .special-table-big tr:nth-child(2) th{color:#dc2626}
+  .special-table-big tr:nth-child(3) th{color:#2563eb}
+  .special-table-big tr:nth-child(4) th{color:#16a34a}
+
+  /* svg math */
+  .svg-math{vertical-align:middle; overflow:visible}
+  .svg-frac{width:104px; height:86px}
+  .svg-frac text,.svg-root text,.svg-formula text{
+    font-family:"Times New Roman","Cambria Math",serif; font-weight:700; fill:#111827;
+  }
+  .svg-frac line,.svg-frac path,.svg-root line,.svg-root path,.svg-formula line,.svg-formula path{
+    stroke:#111827; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round;
+  }
+  .svg-root{width:78px; height:58px}
+  .svg-formula{width:100%; height:100%}
+  .svg-formula .t-red{fill:#dc2626}
+  .svg-formula .t-blue{fill:#2563eb}
+  .svg-formula .t-green{fill:#16a34a}
+
+  /* page 4 */
+  .observe-grid{display:grid; grid-template-rows:repeat(3,1fr); gap:1.7vh; align-content:center}
+  .observe-box{
+    border:3px solid #dce4ee; border-radius:22px; background:#f8fafc; padding:1.7vh 1.6vw;
+    display:flex; align-items:center; font-size:clamp(31px,1.95vw,44px); font-weight:900; line-height:1.45;
+  }
+  .observe-mark{
+    width:55px; height:55px; border-radius:50%; background:#145fca; color:#fff;
+    display:inline-flex; align-items:center; justify-content:center; margin-right:1.2vw;
+    font-size:28px; flex:0 0 auto;
+  }
+  .blue{color:var(--blue)} .red{color:var(--red)} .green{color:var(--green)}
+
+  @media(max-aspect-ratio:4/3){
+    body{overflow:auto}
+    #page1{padding-bottom:10vh}
+    #container{height:auto;min-height:100vh;grid-template-columns:1fr}
+    .canvas-wrapper{height:68vh}
+    .info-page{height:auto;min-height:100vh}
+    .formula-grid{grid-template-columns:1fr}
+  }
+</style>
+
+<style id="page2-svg-fraction-fix">
+  .formula-main{
+    min-height:26vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .formula-svg{
+    width:96%;
+    height:175px;
+    overflow:visible;
+  }
+  .formula-svg text{
+    font-family:"Times New Roman","Cambria Math",serif;
+    font-weight:700;
+  }
+  .formula-svg .redtxt{fill:#dc2626}
+  .formula-svg .bluetxt{fill:#2563eb}
+  .formula-svg .greentxt{fill:#16a34a}
+  .formula-svg line{
+    stroke-width:3.5;
+    stroke-linecap:round;
+  }
+  .formula-svg .redline{stroke:#dc2626}
+  .formula-svg .blueline{stroke:#2563eb}
+  .formula-svg .greenline{stroke:#16a34a}
+  .formula-svg .segline{
+    stroke-width:2.7;
+    stroke-linecap:square;
+  }
+</style>
+
+</head>
+<body>
+
+<div id="page1" class="page-screen">
+  <div id="container">
+    <div class="canvas-wrapper">
+      <canvas id="myCanvas"></canvas>
+    </div>
+    <div class="controls">
+      <div class="title-card">
+        사분원에서 삼각비 확인하기
+        <span class="subtitle">슬라이더를 움직여 0°~90°에서 <span class="math">sin</span>, <span class="math">cos</span>, <span class="math">tan</span>의 변화를 관찰하세요.</span>
+      </div>
+
+      <div class="angle-card">
+        <div class="angle-display"><span class="theta">θ</span> = <span id="angleText">40</span>°</div>
+        <input type="range" id="angleSlider" min="0" max="90" value="40" step="1">
+        <div class="ticks">
+          <span>0°</span><span>30°</span><span>45°</span><span>60°</span><span>90°</span>
+        </div>
+      </div>
+
+      <div class="value-card">
+        <div class="val-item val-sin">
+          <span class="label">sin θ</span>
+          <span class="value" id="sinText">0.6428</span>
+        </div>
+        <div class="val-item val-cos">
+          <span class="label">cos θ</span>
+          <span class="value" id="cosText">0.7660</span>
+        </div>
+        <div class="val-item val-tan">
+          <span class="label">tan θ</span>
+          <span class="value" id="tanText">0.8391</span>
+        </div>
+      </div>
+
+      <div class="legend-card">
+        <div class="blue"><span class="math"><span class="seg">OA</span> = cos θ</span></div>
+        <div class="red"><span class="math"><span class="seg">AB</span> = sin θ</span></div>
+        <div class="green"><span class="math"><span class="seg">CD</span> = tan θ</span></div>
+        <div><span class="math"><span class="seg">OB</span> = 1</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="page2" class="page-screen hidden">
+  <div class="info-page">
+    <div class="big-card">
+      <div>
+        <div class="big-title"><span class="badge-num">1</span>삼각비의 관계</div>
+        <div class="big-sub">사분원에서는 반지름 <span class="math"><span class="seg">OB</span> = 1</span> 이므로 삼각비를 선분의 길이로 바로 읽을 수 있습니다.</div>
+      </div>
+      <div class="formula-grid">
+        <div class="formula-card">
+          <div class="formula-main red">
+<svg class="formula-svg" viewBox="0 0 520 175" aria-label="sin theta equals AB over OB equals AB">
+  <text x="20" y="102" font-size="48" class="redtxt">sin θ =</text>
+
+  <!-- numerator -->
+  <line x1="220" y1="38" x2="278" y2="38" class="redline segline"></line>
+  <text x="249" y="70" text-anchor="middle" font-size="36" class="redtxt">AB</text>
+
+  <!-- fraction bar -->
+  <line x1="205" y1="86" x2="292" y2="86" class="redline"></line>
+
+  <!-- denominator -->
+  <line x1="220" y1="101" x2="278" y2="101" class="redline segline"></line>
+  <text x="249" y="137" text-anchor="middle" font-size="36" class="redtxt">OB</text>
+
+  <!-- equals result -->
+  <text x="322" y="102" font-size="48" class="redtxt">=</text>
+  <line x1="381" y1="64" x2="443" y2="64" class="redline segline"></line>
+  <text x="412" y="104" text-anchor="middle" font-size="48" class="redtxt">AB</text>
+</svg></div>
+          <div class="formula-note">반지름이 1이므로<br><b><span class="math">sin θ</span>는 <span class="math"><span class="seg">AB</span></span>의 길이</b></div>
+        </div>
+
+        <div class="formula-card">
+          <div class="formula-main blue">
+<svg class="formula-svg" viewBox="0 0 520 175" aria-label="cos theta equals OA over OB equals OA">
+  <text x="20" y="102" font-size="48" class="bluetxt">cos θ =</text>
+
+  <!-- numerator -->
+  <line x1="220" y1="38" x2="278" y2="38" class="blueline segline"></line>
+  <text x="249" y="70" text-anchor="middle" font-size="36" class="bluetxt">OA</text>
+
+  <!-- fraction bar -->
+  <line x1="205" y1="86" x2="292" y2="86" class="blueline"></line>
+
+  <!-- denominator -->
+  <line x1="220" y1="101" x2="278" y2="101" class="blueline segline"></line>
+  <text x="249" y="137" text-anchor="middle" font-size="36" class="bluetxt">OB</text>
+
+  <!-- equals result -->
+  <text x="322" y="102" font-size="48" class="bluetxt">=</text>
+  <line x1="381" y1="64" x2="443" y2="64" class="blueline segline"></line>
+  <text x="412" y="104" text-anchor="middle" font-size="48" class="bluetxt">OA</text>
+</svg></div>
+          <div class="formula-note">반지름이 1이므로<br><b><span class="math">cos θ</span>는 <span class="math"><span class="seg">OA</span></span>의 길이</b></div>
+        </div>
+
+        <div class="formula-card">
+          <div class="formula-main green">
+<svg class="formula-svg" viewBox="0 0 520 175" aria-label="tan theta equals AB over OA equals CD">
+  <text x="20" y="102" font-size="48" class="greentxt">tan θ =</text>
+
+  <!-- numerator -->
+  <line x1="220" y1="38" x2="278" y2="38" class="greenline segline"></line>
+  <text x="249" y="70" text-anchor="middle" font-size="36" class="greentxt">AB</text>
+
+  <!-- fraction bar -->
+  <line x1="205" y1="86" x2="292" y2="86" class="greenline"></line>
+
+  <!-- denominator -->
+  <line x1="220" y1="101" x2="278" y2="101" class="greenline segline"></line>
+  <text x="249" y="137" text-anchor="middle" font-size="36" class="greentxt">OA</text>
+
+  <!-- equals result -->
+  <text x="322" y="102" font-size="48" class="greentxt">=</text>
+  <line x1="381" y1="64" x2="443" y2="64" class="greenline segline"></line>
+  <text x="412" y="104" text-anchor="middle" font-size="48" class="greentxt">CD</text>
+</svg></div>
+          <div class="formula-note">직선 <span class="math">x = 1</span> 까지 연장하면<br><b><span class="math">tan θ</span>는 <span class="math"><span class="seg">CD</span></span>의 길이</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="page3" class="page-screen hidden">
+  <div class="info-page">
+    <div class="big-card">
+      <div>
+        <div class="big-title"><span class="badge-num">2</span>특수각의 삼각비</div>
+        <div class="big-sub">0°, 30°, 45°, 60°, 90°에서의 삼각비 값을 정리합니다.</div>
+      </div>
+      <div class="special-wrap">
+        <table class="special-table-big">
+          <tr>
+            <th><span class="theta-symbol">θ</span></th>
+            <th>0°</th><th>30°</th><th>45°</th><th>60°</th><th>90°</th>
+          </tr>
+          <tr>
+            <th><span class="math">sin θ</span></th>
+            <td>0</td>
+            <td>
+              <svg class="svg-math svg-frac" viewBox="0 0 104 86" aria-label="1 over 2">
+                <text x="52" y="31" text-anchor="middle" font-size="31">1</text>
+                <line x1="24" y1="43" x2="80" y2="43"></line>
+                <text x="52" y="73" text-anchor="middle" font-size="31">2</text>
+              </svg>
+            </td>
+            <td>
+              <svg class="svg-math svg-frac" viewBox="0 0 104 86" aria-label="square root 2 over 2">
+                <path d="M24 27 L31 35 L38 13 L44 13"></path>
+                <line x1="44" y1="13" x2="68" y2="13"></line>
+                <text x="57" y="35" text-anchor="middle" font-size="31">2</text>
+                <line x1="18" y1="43" x2="86" y2="43"></line>
+                <text x="52" y="73" text-anchor="middle" font-size="31">2</text>
+              </svg>
+            </td>
+            <td>
+              <svg class="svg-math svg-frac" viewBox="0 0 104 86" aria-label="square root 3 over 2">
+                <path d="M24 27 L31 35 L38 13 L44 13"></path>
+                <line x1="44" y1="13" x2="68" y2="13"></line>
+                <text x="57" y="35" text-anchor="middle" font-size="31">3</text>
+                <line x1="18" y1="43" x2="86" y2="43"></line>
+                <text x="52" y="73" text-anchor="middle" font-size="31">2</text>
+              </svg>
+            </td>
+            <td>1</td>
+          </tr>
+          <tr>
+            <th><span class="math">cos θ</span></th>
+            <td>1</td>
+            <td>
+              <svg class="svg-math svg-frac" viewBox="0 0 104 86" aria-label="square root 3 over 2">
+                <path d="M24 27 L31 35 L38 13 L44 13"></path>
+                <line x1="44" y1="13" x2="68" y2="13"></line>
+                <text x="57" y="35" text-anchor="middle" font-size="31">3</text>
+                <line x1="18" y1="43" x2="86" y2="43"></line>
+                <text x="52" y="73" text-anchor="middle" font-size="31">2</text>
+              </svg>
+            </td>
+            <td>
+              <svg class="svg-math svg-frac" viewBox="0 0 104 86" aria-label="square root 2 over 2">
+                <path d="M24 27 L31 35 L38 13 L44 13"></path>
+                <line x1="44" y1="13" x2="68" y2="13"></line>
+                <text x="57" y="35" text-anchor="middle" font-size="31">2</text>
+                <line x1="18" y1="43" x2="86" y2="43"></line>
+                <text x="52" y="73" text-anchor="middle" font-size="31">2</text>
+              </svg>
+            </td>
+            <td>
+              <svg class="svg-math svg-frac" viewBox="0 0 104 86" aria-label="1 over 2">
+                <text x="52" y="31" text-anchor="middle" font-size="31">1</text>
+                <line x1="24" y1="43" x2="80" y2="43"></line>
+                <text x="52" y="73" text-anchor="middle" font-size="31">2</text>
+              </svg>
+            </td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <th><span class="math">tan θ</span></th>
+            <td>0</td>
+            <td>
+              <svg class="svg-math svg-frac" viewBox="0 0 104 86" aria-label="square root 3 over 3">
+                <path d="M24 27 L31 35 L38 13 L44 13"></path>
+                <line x1="44" y1="13" x2="68" y2="13"></line>
+                <text x="57" y="35" text-anchor="middle" font-size="31">3</text>
+                <line x1="18" y1="43" x2="86" y2="43"></line>
+                <text x="52" y="73" text-anchor="middle" font-size="31">3</text>
+              </svg>
+            </td>
+            <td>1</td>
+            <td>
+              <svg class="svg-math svg-root" viewBox="0 0 78 58" aria-label="square root 3">
+                <path d="M12 28 L19 36 L27 13 L33 13"></path>
+                <line x1="33" y1="13" x2="58" y2="13"></line>
+                <text x="46" y="37" text-anchor="middle" font-size="33">3</text>
+              </svg>
+            </td>
+            <td style="font-size:.78em">정의되지 않음</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="page4" class="page-screen hidden">
+  <div class="info-page">
+    <div class="big-card">
+      <div>
+        <div class="big-title"><span class="badge-num">3</span>각이 변할 때 관찰할 점</div>
+        <div class="big-sub">첫 화면의 슬라이더를 움직이며 확인할 핵심 변화입니다.</div>
+      </div>
+      <div class="observe-grid">
+        <div class="observe-box">
+          <span class="observe-mark">1</span>
+          θ가 커질수록 <span class="red">&nbsp;sin θ는 커지고&nbsp;</span>, <span class="blue">cos θ는 작아진다.</span>
+        </div>
+        <div class="observe-box">
+          <span class="observe-mark">2</span>
+          45°에서는 <b>&nbsp;sin θ = cos θ&nbsp;</b> 이다.
+        </div>
+        <div class="observe-box">
+          <span class="observe-mark">3</span>
+          θ가 90°에 가까워질수록 <span class="green">&nbsp;tan θ는 매우 커진다.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button id="prevBtn" class="nav-btn hidden">◀ 이전</button>
+<button id="nextBtn" class="nav-btn">다음 ▶</button>
+<div id="pageNo" class="page-no">1 / 4</div>
+
+<script>
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+const angleSlider = document.getElementById('angleSlider');
+const angleText = document.getElementById('angleText');
+const sinText = document.getElementById('sinText');
+const cosText = document.getElementById('cosText');
+const tanText = document.getElementById('tanText');
+
+canvas.width = 1200;
+canvas.height = 900;
+
+const origin = { x: 120, y: 785 };
+const R = 650;
+const grid = R / 10;
+const topLimit = 80;
+
+function line(x1,y1,x2,y2,color,width,dash){
+  ctx.save();
+  ctx.beginPath();
+  ctx.setLineDash(dash || []);
+  ctx.strokeStyle = color || '#111';
+  ctx.lineWidth = width || 3;
+  ctx.moveTo(x1,y1);
+  ctx.lineTo(x2,y2);
+  ctx.stroke();
+  ctx.restore();
+}
+function text(txt,x,y,sizePx,color,align,font,weight){
+  ctx.save();
+  ctx.fillStyle = color || '#111';
+  ctx.font = (weight || '700') + ' ' + sizePx + 'px ' + (font || 'Arial');
+  ctx.textAlign = align || 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(txt,x,y);
+  ctx.restore();
+}
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+}
+function labelBox(txt,x,y,sizePx,color){
+  ctx.save();
+  ctx.font = '700 ' + sizePx + 'px Arial';
+  const w = ctx.measureText(txt).width + 24;
+  const h = sizePx + 16;
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  roundRect(x-w/2, y-h/2, w, h, 12);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(txt,x,y+1);
+  ctx.restore();
+}
+function point(x,y,label,dx,dy){
+  ctx.save();
+  ctx.fillStyle = '#111827';
+  ctx.beginPath();
+  ctx.arc(x,y,7,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+  text(label, x+(dx||0), y+(dy||0), 34, '#111827', 'center', 'Georgia', '700');
+}
+function drawGrid(){
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  for(let i=0;i<=10;i++){
+    const x = origin.x + i*grid;
+    const y = origin.y - i*grid;
+    line(x, origin.y-R, x, origin.y, '#cfe8ff', 2);
+    line(origin.x, y, origin.x+R, y, '#cfe8ff', 2);
+  }
+  for(let i=0;i<=10;i+=5){
+    const x = origin.x + i*grid;
+    const y = origin.y - i*grid;
+    line(x, origin.y-R, x, origin.y, '#7fc6f1', 3);
+    line(origin.x, y, origin.x+R, y, '#7fc6f1', 3);
+  }
+}
+function drawAxes(){
+  line(origin.x-5, origin.y, origin.x+R+78, origin.y, '#1f2937', 4);
+  line(origin.x, origin.y+5, origin.x, origin.y-R-55, '#1f2937', 4);
+
+  ctx.fillStyle = '#1f2937';
+  ctx.beginPath();
+  ctx.moveTo(origin.x+R+78,origin.y);
+  ctx.lineTo(origin.x+R+54,origin.y-11);
+  ctx.lineTo(origin.x+R+54,origin.y+11);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(origin.x,origin.y-R-55);
+  ctx.lineTo(origin.x-11,origin.y-R-31);
+  ctx.lineTo(origin.x+11,origin.y-R-31);
+  ctx.fill();
+
+  text('x', origin.x+R+100, origin.y+4, 36, '#1f2937', 'left', 'Georgia', '700');
+  text('y', origin.x-8, origin.y-R-77, 36, '#1f2937', 'center', 'Georgia', '700');
+
+  text('O', origin.x-30, origin.y+28, 34, '#1f2937', 'center', 'Georgia', '700');
+  text('0.5', origin.x+R/2-34, origin.y+38, 26, '#334155');
+  text('1', origin.x+R-18, origin.y+38, 28, '#334155');
+  text('0.5', origin.x-38, origin.y-R/2, 26, '#334155');
+  text('1', origin.x-28, origin.y-R, 28, '#334155');
+
+  line(origin.x+R/2, origin.y-8, origin.x+R/2, origin.y+8, '#475569', 2);
+  line(origin.x+R, origin.y-8, origin.x+R, origin.y+8, '#475569', 2);
+  line(origin.x-8, origin.y-R/2, origin.x+8, origin.y-R/2, '#475569', 2);
+  line(origin.x-8, origin.y-R, origin.x+8, origin.y-R, '#475569', 2);
+}
+function draw(angleDeg){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const a = angleDeg * Math.PI / 180;
+  const sinVal = Math.sin(a);
+  const cosVal = Math.cos(a);
+  const tanVal = angleDeg === 90 ? Infinity : Math.tan(a);
+
+  const bx = origin.x + R*cosVal;
+  const by = origin.y - R*sinVal;
+  const ax = bx;
+  const ay = origin.y;
+  const cx = origin.x + R;
+  const cy = origin.y;
+  const dyRaw = angleDeg === 90 ? origin.y - R*4 : origin.y - R*tanVal;
+  const dy = Math.max(-2000, dyRaw);
+
+  drawGrid();
+  drawAxes();
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(origin.x, origin.y, R, 0, -Math.PI/2, true);
+  ctx.strokeStyle = '#8a8f98';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.restore();
+
+  line(cx, topLimit, cx, cy, '#475569', 4);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(origin.x, origin.y);
+  ctx.lineTo(ax, ay);
+  ctx.lineTo(bx, by);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(59,130,246,.16)';
+  ctx.fill();
+  ctx.restore();
+
+  if(angleDeg < 90){
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(origin.x, origin.y);
+    ctx.lineTo(cx, cy);
+    ctx.lineTo(cx, Math.max(topLimit, dy));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(34,197,94,.08)';
+    ctx.fill();
+    ctx.restore();
+  }
+
+  line(origin.x, origin.y, ax, ay, '#2563eb', 11);
+  line(ax, ay, bx, by, '#dc2626', 11);
+  line(origin.x, origin.y, bx, by, '#111827', 5);
+
+  if(angleDeg < 90){
+    line(bx, by, cx, dy, '#111827', 4);
+    line(cx, cy, cx, dy, '#16a34a', 11);
+  }
+
+  const s = 22;
+  line(ax-s, ay, ax-s, ay-s, '#475569', 3);
+  line(ax-s, ay-s, ax, ay-s, '#475569', 3);
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(origin.x, origin.y, 78, 0, -a, true);
+  ctx.strokeStyle = '#111827';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.restore();
+
+  const mid = -a/2;
+  text(angleDeg + '°',
+       origin.x + 110*Math.cos(mid),
+       origin.y + 110*Math.sin(mid) - 2,
+       34, '#111827', 'center', 'Arial', '800');
+
+  point(ax, ay, 'A', 20, 34);
+  point(bx, by, 'B', 20, -24);
+  point(cx, cy, 'C', 18, 34);
+
+  if(angleDeg < 90){
+    if(dy > topLimit + 28){
+      point(cx, dy, 'D', 24, -18);
+    }else{
+      text('D', cx+28, topLimit+24, 30, '#16a34a', 'left', 'Georgia', '700');
+    }
+  }
+
+  if(cosVal > 0.1){
+    labelBox('cos θ', (origin.x+ax)/2, origin.y-46, 28, '#2563eb');
+  }
+  if(sinVal > 0.1){
+    labelBox('sin θ', ax+86, (ay+by)/2, 28, '#dc2626');
+  }
+  if(angleDeg > 6 && angleDeg < 70){
+    const ty = Math.max(topLimit+36, (cy+dy)/2);
+    labelBox('tan θ', cx+92, ty, 28, '#16a34a');
+  }
+  labelBox('1', (origin.x+bx)/2-10, (origin.y+by)/2-34, 24, '#111827');
+
+  angleText.textContent = angleDeg;
+  sinText.textContent = sinVal.toFixed(4);
+  cosText.textContent = cosVal.toFixed(4);
+  tanText.textContent = angleDeg===90 ? '정의되지 않음' : tanVal.toFixed(4);
+}
+angleSlider.addEventListener('input', function(e){ draw(Number(e.target.value)); });
+draw(40);
+
+const pages = [1,2,3,4].map(function(n){ return document.getElementById('page'+n); });
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const pageNo = document.getElementById('pageNo');
+let currentPage = 1;
+
+function showPage(n){
+  currentPage = Math.max(1, Math.min(4, n));
+  pages.forEach(function(p, i){ p.classList.toggle('hidden', i !== currentPage - 1); });
+  prevBtn.classList.toggle('hidden', currentPage === 1);
+  nextBtn.classList.toggle('hidden', currentPage === 4);
+  pageNo.textContent = currentPage + ' / 4';
+}
+prevBtn.addEventListener('click', function(){ showPage(currentPage - 1); });
+nextBtn.addEventListener('click', function(){ showPage(currentPage + 1); });
+document.addEventListener('keydown', function(e){
+  if(e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') showPage(currentPage + 1);
+  if(e.key === 'ArrowLeft' || e.key === 'PageUp') showPage(currentPage - 1);
+});
+showPage(1);
+</script>
+</body>
+</html>
